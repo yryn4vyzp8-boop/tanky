@@ -215,16 +215,21 @@ export const transactionRepository = {
   },
 
   /**
-   * Is there already an active (non-terminal) transaction on this exact
-   * pump? Used to reject a second concurrent authorization attempt at the
-   * TANKY layer, on top of the FuelStationProvider's own pump-occupied
-   * check — belt and braces for transaction isolation.
+   * Is there already an in-flight (past CREATED, not yet terminal)
+   * transaction on this exact pump? Used to reject a second concurrent
+   * authorization attempt at the TANKY layer, on top of the
+   * FuelStationProvider's own pump-occupied check — belt and braces for
+   * transaction isolation. CREATED itself doesn't count: a transaction that
+   * was created but never progressed (client crashed, user abandoned the
+   * payment screen) never touched the provider, so it must not permanently
+   * block the pump for everyone else.
    */
   findActiveByPump(pumpId: string): TransactionRecord | null {
     const rows = db
       .prepare(`SELECT * FROM fuel_transactions WHERE pump_id = ? ORDER BY created_at DESC`)
       .all(pumpId) as unknown as TransactionRow[];
-    const terminal = new Set([
+    const nonBlocking = new Set([
+      "CREATED",
       "COMPLETED",
       "PAYMENT_FAILED",
       "PUMP_AUTHORIZATION_FAILED",
@@ -233,7 +238,7 @@ export const transactionRepository = {
       "TRANSACTION_CANCELLED",
       "TIMEOUT",
     ]);
-    const active = rows.find((r) => !terminal.has(r.status));
+    const active = rows.find((r) => !nonBlocking.has(r.status));
     return active ? toTransaction(active) : null;
   },
 };

@@ -38,7 +38,9 @@ export function PhoneFrame({ children }: PropsWithChildren) {
       <View style={styles.phoneShadowWrap}>
         <View style={styles.bezel}>
           <View style={styles.dynamicIsland} pointerEvents="none" />
-          <View style={styles.screen}>{children}</View>
+          <View style={styles.screen}>
+            <View style={styles.screenContent}>{children}</View>
+          </View>
           <View style={styles.homeIndicator} pointerEvents="none" />
         </View>
       </View>
@@ -135,6 +137,15 @@ const styles = StyleSheet.create({
     borderRadius: 52,
     overflow: "hidden",
     backgroundColor: colors.background,
+  },
+  // The Dynamic Island notch below is a purely decorative overlay — the
+  // browser has no idea it's there, so react-native-safe-area-context can't
+  // account for it. This padding is what actually keeps screen content
+  // (headers, titles) clear of it.
+  screenContent: {
+    flex: 1,
+    paddingTop: 46,
+    paddingBottom: 26,
   },
   dynamicIsland: {
     position: "absolute",
