@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "TANKY",
+    "slug": "tanky",
+    "scheme": "tanky",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#0B5FFF",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ch.tanky.app"
+    },
+    "android": {
+      "package": "ch.tanky.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B5FFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "TANKY — Tanken. Bezahlen. Weiterfahren.",
+      "shortName": "TANKY",
+      "themeColor": "#0B5FFF",
+      "backgroundColor": "#0A0E1A",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
