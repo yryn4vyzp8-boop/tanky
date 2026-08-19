@@ -15,7 +15,7 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: npm install && npm run build -w @tanky/domain
+    buildCommand: npm install && npm run build -w @tanky/domain && npm run build -w @tanky/api
     startCommand: npm run start -w @tanky/api
     healthCheckPath: /api/v1/health
     envVars:
