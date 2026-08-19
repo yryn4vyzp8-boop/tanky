@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type React from "react";
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +20,22 @@ const DISTANCE_KM: Record<string, number> = {
   "station-zurich": 45.2,
   "station-bern": 98.1,
 };
+
+function StaggerItem({ index, children }: { index: number; children: React.ReactNode }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(14)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 380, delay: index * 75, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 380, delay: index * 75, useNativeDriver: true }),
+    ]).start();
+  }, []);
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 function SkeletonBlock({ width, height, style }: { width?: number | string; height: number; style?: object }) {
   const pulse = useRef(new Animated.Value(0.4)).current;
@@ -127,19 +144,21 @@ export default function HomeScreen() {
           <>
             <Text style={styles.sectionTitle}>Weitere Stationen</Text>
             <View style={{ gap: spacing.md }}>
-              {rest.map((station) => (
-                <Card key={station.id} style={styles.rowCard}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowName}>{station.name}</Text>
-                    <Text style={styles.rowMeta}>
-                      {DISTANCE_KM[station.id]?.toFixed(1)} km ·{" "}
-                      {formatPricePerLiter(station.fuelProducts.find((p) => p.fuelType === "PETROL_95")!.pricePerLiterMilliFrancs)}
-                    </Text>
-                  </View>
-                  <Button variant="secondary" fullWidth={false} onPress={() => router.push(`/(phone)/station/${station.id}`)}>
-                    Wählen
-                  </Button>
-                </Card>
+              {rest.map((station, i) => (
+                <StaggerItem key={station.id} index={i}>
+                  <Card style={styles.rowCard}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowName}>{station.name}</Text>
+                      <Text style={styles.rowMeta}>
+                        {DISTANCE_KM[station.id]?.toFixed(1)} km ·{" "}
+                        {formatPricePerLiter(station.fuelProducts.find((p) => p.fuelType === "PETROL_95")!.pricePerLiterMilliFrancs)}
+                      </Text>
+                    </View>
+                    <Button variant="secondary" fullWidth={false} onPress={() => router.push(`/(phone)/station/${station.id}`)}>
+                      Wählen
+                    </Button>
+                  </Card>
+                </StaggerItem>
               ))}
             </View>
           </>

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { FuelStation, FuelType } from "@tanky/domain";
 import { ScreenContainer } from "../../../components/ScreenContainer";
@@ -8,6 +8,41 @@ import { useRequireAuth } from "../../../lib/use-require-auth";
 import { api, ApiError } from "../../../lib/api-client";
 import { formatPricePerLiter } from "../../../lib/format";
 import { colors, radius, spacing, typography } from "../../../lib/theme";
+
+function PumpTile({
+  pump,
+  fuelType,
+  onPress,
+}: {
+  pump: FuelStation["pumps"][0];
+  fuelType: FuelType;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const disabled = pump.status !== "AVAILABLE" || !pump.supportedFuelTypes.includes(fuelType);
+
+  return (
+    <Animated.View style={[styles.pumpWrap, { transform: [{ scale }] }]}>
+      <Pressable
+        disabled={disabled}
+        onPressIn={() => {
+          if (disabled) return;
+          Animated.spring(scale, { toValue: 0.91, useNativeDriver: true, speed: 60, bounciness: 0 }).start();
+        }}
+        onPressOut={() => {
+          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 45, bounciness: 5 }).start();
+        }}
+        style={[styles.pump, disabled && styles.pumpDisabled]}
+        onPress={onPress}
+      >
+        <Text style={[styles.pumpLabel, disabled && styles.pumpLabelDisabled]}>{pump.label}</Text>
+        {pump.status !== "AVAILABLE" && (
+          <Text style={styles.pumpStatus}>{pump.status === "OCCUPIED" ? "belegt" : "offline"}</Text>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
   { value: "PETROL_95", label: "Bleifrei 95" },
@@ -83,25 +118,19 @@ export default function StationScreen() {
 
       <Text style={styles.sectionTitle}>Zapfsäule wählen</Text>
       <View style={styles.pumpGrid}>
-        {station.pumps.map((pump) => {
-          const disabled = pump.status !== "AVAILABLE" || !pump.supportedFuelTypes.includes(fuelType);
-          return (
-            <Pressable
-              key={pump.id}
-              disabled={disabled}
-              style={[styles.pump, disabled && styles.pumpDisabled]}
-              onPress={() =>
-                router.push({
-                  pathname: "/(phone)/payment",
-                  params: { stationId: station.id, pumpId: pump.id, fuelType },
-                })
-              }
-            >
-              <Text style={[styles.pumpLabel, disabled && styles.pumpLabelDisabled]}>{pump.label}</Text>
-              {pump.status !== "AVAILABLE" && <Text style={styles.pumpStatus}>{pump.status === "OCCUPIED" ? "belegt" : "offline"}</Text>}
-            </Pressable>
-          );
-        })}
+        {station.pumps.map((pump) => (
+          <PumpTile
+            key={pump.id}
+            pump={pump}
+            fuelType={fuelType}
+            onPress={() =>
+              router.push({
+                pathname: "/(phone)/payment",
+                params: { stationId: station.id, pumpId: pump.id, fuelType },
+              })
+            }
+          />
+        ))}
       </View>
     </ScreenContainer>
   );
@@ -121,9 +150,12 @@ const styles = StyleSheet.create({
   price: { color: colors.textPrimary, ...typography.title, alignSelf: "center" },
   sectionTitle: { color: colors.textSecondary, ...typography.captionStrong },
   pumpGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
-  pump: {
+  pumpWrap: {
     width: "22%",
     aspectRatio: 1,
+  },
+  pump: {
+    flex: 1,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
