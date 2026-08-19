@@ -2,8 +2,23 @@ import { userRepository } from "../repositories/user-repository.js";
 import { paymentMethodRepository } from "../repositories/payment-method-repository.js";
 import { vehicleRepository } from "../repositories/vehicle-repository.js";
 import { hashPassword } from "../auth/password.js";
+import { isStripeEnabled } from "../providers.js";
 
 const DEMO_PASSWORD = "tanky-demo-2026";
+
+/**
+ * Stripe publishes these as static, reusable PaymentMethod ids specifically
+ * for server-side test-mode API calls (https://stripe.com/docs/testing) —
+ * no Elements/tokenization flow needed to use them. Real PaymentIntents
+ * created against them succeed exactly like a real test-mode card would.
+ * A mock-token id like "tok_mock_seed_visa" is not a real Stripe object and
+ * fails with an invalid-payment-method error the moment Stripe is the
+ * active provider, so which one we seed has to follow the same switch.
+ */
+const STRIPE_TEST_PAYMENT_METHOD = {
+  VISA: "pm_card_visa",
+  MASTERCARD: "pm_card_mastercard",
+} as const;
 
 /** Seeds a ready-to-drive demo account so the app is usable within seconds of first start. */
 export function seedDemoData(): void {
@@ -28,22 +43,27 @@ export function seedDemoData(): void {
   paymentMethodRepository.create({
     userId: demoUser.id,
     brand: "VISA",
-    last4: "1234",
-    providerToken: "tok_mock_seed_visa",
+    last4: "4242",
+    providerToken: isStripeEnabled ? STRIPE_TEST_PAYMENT_METHOD.VISA : "tok_mock_seed_visa",
     isDefault: true,
   });
   paymentMethodRepository.create({
     userId: demoUser.id,
     brand: "MASTERCARD",
-    last4: "5588",
-    providerToken: "tok_mock_seed_mastercard",
+    last4: "4444",
+    providerToken: isStripeEnabled ? STRIPE_TEST_PAYMENT_METHOD.MASTERCARD : "tok_mock_seed_mastercard",
   });
-  paymentMethodRepository.create({
-    userId: demoUser.id,
-    brand: "TWINT",
-    last4: "0099",
-    providerToken: "tok_mock_seed_twint",
-  });
+  // TWINT has no static test-mode PaymentMethod id to seed against Stripe
+  // (it's a redirect-based method, not a saved reusable card) — only seed
+  // it in mock mode, where every provider token is fake anyway.
+  if (!isStripeEnabled) {
+    paymentMethodRepository.create({
+      userId: demoUser.id,
+      brand: "TWINT",
+      last4: "0099",
+      providerToken: "tok_mock_seed_twint",
+    });
+  }
 
   vehicleRepository.create({
     userId: demoUser.id,
