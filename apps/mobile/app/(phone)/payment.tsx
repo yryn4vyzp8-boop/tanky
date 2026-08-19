@@ -77,12 +77,18 @@ export default function PaymentScreen() {
       <View style={{ gap: spacing.sm }}>
         {methods.map((m) => (
           <Pressable key={m.id} onPress={() => setSelectedMethodId(m.id)}>
-            <Card style={[styles.methodCard, selectedMethodId === m.id && styles.methodCardActive]}>
-              <Text style={styles.methodText}>
-                {BRAND_LABEL[m.brand]} ••••{m.last4}
-              </Text>
-              {selectedMethodId === m.id && <View style={styles.methodCheck} />}
-            </Card>
+            {({ pressed }) => (
+              <Card style={[
+                styles.methodCard,
+                selectedMethodId === m.id && styles.methodCardActive,
+                pressed && styles.methodCardPressed,
+              ]}>
+                <Text style={styles.methodText}>
+                  {BRAND_LABEL[m.brand]} ••••{m.last4}
+                </Text>
+                {selectedMethodId === m.id && <View style={styles.methodCheck} />}
+              </Card>
+            )}
           </Pressable>
         ))}
       </View>
@@ -123,6 +129,7 @@ const styles = StyleSheet.create({
   hint: { color: colors.textMuted, ...typography.caption, marginTop: -spacing.sm },
   methodCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: spacing.md },
   methodCardActive: { borderColor: colors.primary },
+  methodCardPressed: { backgroundColor: colors.surfaceHighlight },
   methodText: { color: colors.textPrimary, ...typography.bodyStrong },
   methodCheck: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary },
   amountRow: { flexDirection: "row", gap: spacing.sm },

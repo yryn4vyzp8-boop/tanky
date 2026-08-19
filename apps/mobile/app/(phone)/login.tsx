@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { ScreenContainer } from "../../components/ScreenContainer";
 import { Button } from "../../components/Button";
@@ -60,20 +60,23 @@ function Field(props: {
   value: string;
   onChangeText: (v: string) => void;
   secureTextEntry?: boolean;
-  autoCapitalize?: "none" | "sentences";
-  keyboardType?: "default" | "email-address";
+  autoCapitalize?: TextInputProps["autoCapitalize"];
+  keyboardType?: TextInputProps["keyboardType"];
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{props.label}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, focused && styles.inputFocused]}
         value={props.value}
         onChangeText={props.onChangeText}
         secureTextEntry={props.secureTextEntry}
         autoCapitalize={props.autoCapitalize ?? "sentences"}
         keyboardType={props.keyboardType ?? "default"}
         placeholderTextColor={colors.textMuted}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
     </View>
   );
@@ -96,6 +99,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     color: colors.textPrimary,
     ...typography.body,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
   },
   error: { color: colors.danger, ...typography.caption },
   demoHint: { marginTop: spacing.lg, alignItems: "center" },

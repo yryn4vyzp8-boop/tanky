@@ -1,34 +1,36 @@
-/**
- * TANKY design tokens. Premium fintech/mobility look: near-black navy
- * surfaces, a single confident accent blue, generous spacing, no visual
- * noise. Used directly (not via a theming library) since the MVP only ships
- * one look — see README for how to extend this to light mode / i18n later.
- */
 export const colors = {
-  background: "#0A0E1A",
-  surface: "#12172A",
-  surfaceElevated: "#1A2036",
-  surfaceHighlight: "#212949",
-  border: "#232A44",
-  borderStrong: "#323C63",
+  // Near-black gradient: avoid pure #000 (OLED smear)
+  background: "#030307",
+  backgroundTop: "#06060E",
 
-  primary: "#0B5FFF",
-  primaryMuted: "#3D7CFF",
-  primaryTint: "#152246",
+  // Translucent surfaces — no solid fills
+  surface: "rgba(255, 255, 255, 0.05)",
+  surfaceElevated: "rgba(255, 255, 255, 0.08)",
+  surfaceHighlight: "rgba(255, 255, 255, 0.12)",
+
+  // Hairline-only borders
+  border: "rgba(255, 255, 255, 0.08)",
+  borderStrong: "rgba(255, 255, 255, 0.14)",
+
+  // Indigo accent — more premium than flat blue
+  primary: "#5E6AD2",
+  primaryMuted: "#8B93E0",
+  primaryTint: "rgba(94, 106, 210, 0.15)",
+  primaryGlow: "rgba(94, 106, 210, 0.25)",
 
   success: "#22C55E",
-  successTint: "#122A1D",
+  successTint: "rgba(34, 197, 94, 0.12)",
   danger: "#F04438",
-  dangerTint: "#2E1516",
+  dangerTint: "rgba(240, 68, 56, 0.12)",
   warning: "#F5A524",
-  warningTint: "#2E2410",
+  warningTint: "rgba(245, 165, 36, 0.12)",
 
-  textPrimary: "#F5F7FA",
-  textSecondary: "#9AA4B8",
-  textMuted: "#5C6480",
-  textInverse: "#0A0E1A",
+  textPrimary: "#EDEDEF",
+  textSecondary: "#8A8F98",
+  textMuted: "#52566A",
+  textInverse: "#020203",
 
-  overlay: "rgba(6, 9, 18, 0.72)",
+  overlay: "rgba(2, 2, 5, 0.76)",
 } as const;
 
 export const spacing = {
