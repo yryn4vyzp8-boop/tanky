@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+import Constants from "expo-constants";
 import type {
   FuelStation,
   FuelTransaction,
@@ -11,7 +13,28 @@ import type {
 } from "@tanky/domain";
 import { tokenStorage } from "./storage";
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
+/**
+ * On web this is simply localhost. On a physical device (Expo Go or a dev
+ * build), "localhost" would mean the phone itself, not the Mac running the
+ * API — so there we derive the Mac's LAN IP from the same address Metro's
+ * dev server used to reach the device, and assume the API runs on that same
+ * machine on port 4000 (true for local development). Override with
+ * EXPO_PUBLIC_API_URL for anything else (a deployed backend, a different
+ * port, ...).
+ */
+function resolveApiBaseUrl(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS === "web") return "http://localhost:4000";
+
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost;
+  const lanHost = hostUri?.split(":")[0];
+  if (lanHost && lanHost !== "localhost") {
+    return `http://${lanHost}:4000`;
+  }
+  return "http://localhost:4000";
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiError extends Error {
   constructor(
