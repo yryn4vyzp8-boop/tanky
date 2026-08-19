@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../../../components/Button";
 import { api, ApiError } from "../../../../lib/api-client";
 import { colors, radius, spacing, typography } from "../../../../lib/theme";
-
-const STRONG_EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+import { STRONG_EASE_OUT } from "../../../../lib/motion";
 
 function SonarRing({ delay }: { delay: number }) {
   const progress = useRef(new Animated.Value(0)).current;

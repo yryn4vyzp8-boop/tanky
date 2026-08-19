@@ -13,6 +13,7 @@ import { useAuth } from "../../lib/auth-context";
 import { api, ApiError } from "../../lib/api-client";
 import { formatPricePerLiter } from "../../lib/format";
 import { colors, radius, spacing, typography } from "../../lib/theme";
+import { STRONG_EASE_OUT } from "../../lib/motion";
 
 const DISTANCE_KM: Record<string, number> = {
   "station-luzern": 1.2,
@@ -23,11 +24,11 @@ const DISTANCE_KM: Record<string, number> = {
 
 function StaggerItem({ index, children }: { index: number; children: React.ReactNode }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(14)).current;
+  const translateY = useRef(new Animated.Value(12)).current;
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 380, delay: index * 75, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 380, delay: index * 75, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 280, delay: index * 65, easing: STRONG_EASE_OUT, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 280, delay: index * 65, easing: STRONG_EASE_OUT, useNativeDriver: true }),
     ]).start();
   }, []);
   return (
@@ -62,6 +63,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroY = useRef(new Animated.Value(16)).current;
 
   const load = useCallback(() => {
     setError(null);
@@ -83,6 +86,15 @@ export default function HomeScreen() {
   useEffect(() => {
     if (isReady) load();
   }, [isReady, load]);
+
+  useEffect(() => {
+    if (!loading && !error) {
+      Animated.parallel([
+        Animated.timing(heroOpacity, { toValue: 1, duration: 320, easing: STRONG_EASE_OUT, useNativeDriver: true }),
+        Animated.timing(heroY, { toValue: 0, duration: 320, easing: STRONG_EASE_OUT, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [loading, error]);
 
   if (!isReady) return null;
 
@@ -121,23 +133,25 @@ export default function HomeScreen() {
         {error && <ErrorState message={error} onRetry={load} />}
 
         {!loading && !error && nearest && (
-          <Card style={styles.heroCard}>
-            <View style={styles.heroTopRow}>
-              <Text style={styles.heroDistance}>{DISTANCE_KM[nearest.id]?.toFixed(1)} km</Text>
-              {nearest.tankyEnabled && (
-                <View style={styles.tankyBadge}>
-                  <Text style={styles.tankyBadgeText}>TANKY</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.heroName}>{nearest.name}</Text>
-            <Text style={styles.heroCity}>{nearest.city}</Text>
-            <Text style={styles.heroPrice}>
-              {formatPricePerLiter(nearest.fuelProducts.find((p) => p.fuelType === "PETROL_95")!.pricePerLiterMilliFrancs)}
-              <Text style={styles.heroPriceLabel}> · Bleifrei 95</Text>
-            </Text>
-            <Button onPress={() => router.push(`/(phone)/station/${nearest.id}`)}>TANKEN</Button>
-          </Card>
+          <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroY }] }}>
+            <Card style={styles.heroCard}>
+              <View style={styles.heroTopRow}>
+                <Text style={styles.heroDistance}>{DISTANCE_KM[nearest.id]?.toFixed(1)} km</Text>
+                {nearest.tankyEnabled && (
+                  <View style={styles.tankyBadge}>
+                    <Text style={styles.tankyBadgeText}>TANKY</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.heroName}>{nearest.name}</Text>
+              <Text style={styles.heroCity}>{nearest.city}</Text>
+              <Text style={styles.heroPrice}>
+                {formatPricePerLiter(nearest.fuelProducts.find((p) => p.fuelType === "PETROL_95")!.pricePerLiterMilliFrancs)}
+                <Text style={styles.heroPriceLabel}> · Bleifrei 95</Text>
+              </Text>
+              <Button onPress={() => router.push(`/(phone)/station/${nearest.id}`)}>TANKEN</Button>
+            </Card>
+          </Animated.View>
         )}
 
         {!loading && rest.length > 0 && (

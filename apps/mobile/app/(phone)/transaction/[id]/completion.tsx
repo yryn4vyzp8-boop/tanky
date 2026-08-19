@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { STRONG_EASE_OUT, SPRING_CELEBRATION } from "../../../../lib/motion";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Receipt } from "@tanky/domain";
@@ -21,17 +22,12 @@ export default function CompletionScreen() {
 
   useEffect(() => {
     Animated.sequence([
-      Animated.spring(checkScale, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 90,
-        friction: 7,
-      }),
+      Animated.spring(checkScale, { toValue: 1, ...SPRING_CELEBRATION }),
       Animated.parallel([
-        Animated.timing(contentOpacity, { toValue: 1, duration: 420, useNativeDriver: true }),
-        Animated.timing(contentY, { toValue: 0, duration: 420, useNativeDriver: true }),
+        Animated.timing(contentOpacity, { toValue: 1, duration: 380, easing: STRONG_EASE_OUT, useNativeDriver: true }),
+        Animated.timing(contentY, { toValue: 0, duration: 380, easing: STRONG_EASE_OUT, useNativeDriver: true }),
       ]),
-      Animated.timing(actionsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(actionsOpacity, { toValue: 1, duration: 260, easing: STRONG_EASE_OUT, useNativeDriver: true }),
     ]).start();
   }, []);
 

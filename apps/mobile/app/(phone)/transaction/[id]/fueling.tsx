@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from "react-native";
+import { STRONG_EASE_OUT } from "../../../../lib/motion";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, ApiError, type FuelingProgress } from "../../../../lib/api-client";
@@ -35,8 +36,8 @@ export default function FuelingScreen() {
   useEffect(() => {
     if (!progress?.amountRappen) return;
     Animated.sequence([
-      Animated.timing(amountScale, { toValue: 1.04, duration: 80, useNativeDriver: true }),
-      Animated.timing(amountScale, { toValue: 1, duration: 140, useNativeDriver: true }),
+      Animated.timing(amountScale, { toValue: 1.04, duration: 80, easing: STRONG_EASE_OUT, useNativeDriver: true }),
+      Animated.timing(amountScale, { toValue: 1, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: true }),
     ]).start();
   }, [progress?.amountRappen]);
 

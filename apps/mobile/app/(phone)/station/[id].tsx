@@ -8,6 +8,7 @@ import { useRequireAuth } from "../../../lib/use-require-auth";
 import { api, ApiError } from "../../../lib/api-client";
 import { formatPricePerLiter } from "../../../lib/format";
 import { colors, radius, spacing, typography } from "../../../lib/theme";
+import { SPRING_PRESS_IN, SPRING_PRESS_OUT } from "../../../lib/motion";
 
 function PumpTile({
   pump,
@@ -27,10 +28,10 @@ function PumpTile({
         disabled={disabled}
         onPressIn={() => {
           if (disabled) return;
-          Animated.spring(scale, { toValue: 0.91, useNativeDriver: true, speed: 60, bounciness: 0 }).start();
+          Animated.spring(scale, { toValue: 0.95, ...SPRING_PRESS_IN }).start();
         }}
         onPressOut={() => {
-          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 45, bounciness: 5 }).start();
+          Animated.spring(scale, { toValue: 1, ...SPRING_PRESS_OUT }).start();
         }}
         style={[styles.pump, disabled && styles.pumpDisabled]}
         onPress={onPress}
@@ -49,6 +50,30 @@ const FUEL_TYPES: { value: FuelType; label: string }[] = [
   { value: "PETROL_98", label: "Bleifrei 98" },
   { value: "DIESEL", label: "Diesel" },
 ];
+
+function SegmentButton({
+  ft,
+  active,
+  onPress,
+}: {
+  ft: { value: FuelType; label: string };
+  active: boolean;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  return (
+    <Animated.View style={[styles.segWrap, { transform: [{ scale }] }]}>
+      <Pressable
+        style={[styles.segment, active && styles.segmentActive]}
+        onPress={onPress}
+        onPressIn={() => Animated.spring(scale, { toValue: 0.94, ...SPRING_PRESS_IN }).start()}
+        onPressOut={() => Animated.spring(scale, { toValue: 1, ...SPRING_PRESS_OUT }).start()}
+      >
+        <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{ft.label}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export default function StationScreen() {
   const { isReady } = useRequireAuth();
@@ -105,13 +130,12 @@ export default function StationScreen() {
 
       <View style={styles.segmented}>
         {FUEL_TYPES.map((ft) => (
-          <Pressable
+          <SegmentButton
             key={ft.value}
-            style={[styles.segment, fuelType === ft.value && styles.segmentActive]}
+            ft={ft}
+            active={fuelType === ft.value}
             onPress={() => setFuelType(ft.value)}
-          >
-            <Text style={[styles.segmentText, fuelType === ft.value && styles.segmentTextActive]}>{ft.label}</Text>
-          </Pressable>
+          />
         ))}
       </View>
       <Text style={styles.price}>{formatPricePerLiter(product.pricePerLiterMilliFrancs)}</Text>
@@ -143,6 +167,7 @@ const styles = StyleSheet.create({
   stationName: { color: colors.textPrimary, ...typography.title },
   stationAddress: { color: colors.textMuted, ...typography.caption, marginTop: spacing.xs },
   segmented: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: radius.md, padding: 4, gap: 4 },
+  segWrap: { flex: 1 },
   segment: { flex: 1, paddingVertical: spacing.sm, borderRadius: radius.sm, alignItems: "center" },
   segmentActive: { backgroundColor: colors.primaryTint },
   segmentText: { color: colors.textMuted, ...typography.caption },

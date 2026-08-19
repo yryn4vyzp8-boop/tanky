@@ -53,15 +53,16 @@ export const radius = {
 
 export const typography = {
   fontFamily: "System",
-  display: { fontSize: 36, fontWeight: "800" as const, letterSpacing: -1.0 },
-  title:   { fontSize: 24, fontWeight: "700" as const, letterSpacing: -0.6 },
-  headline: { fontSize: 17, fontWeight: "600" as const, letterSpacing: -0.2 },
-  body:     { fontSize: 15, fontWeight: "400" as const, letterSpacing: 0 },
-  bodyStrong: { fontSize: 15, fontWeight: "600" as const, letterSpacing: -0.1 },
-  caption:  { fontSize: 13, fontWeight: "400" as const, letterSpacing: 0 },
-  captionStrong: { fontSize: 13, fontWeight: "500" as const, letterSpacing: 0.1 },
-  micro:    { fontSize: 11, fontWeight: "600" as const, letterSpacing: 0.8 },
-  // Tabular numbers for CHF amounts and prices
-  amount:   { fontSize: 22, fontWeight: "700" as const, letterSpacing: -0.5, fontVariant: ["tabular-nums" as const] },
-  amountLg: { fontSize: 32, fontWeight: "800" as const, letterSpacing: -1.0, fontVariant: ["tabular-nums" as const] },
+  // Apple principle: negative tracking grows with size — tighten headings, leave body near 0
+  display:      { fontSize: 36, fontWeight: "800" as const, letterSpacing: -1.2, lineHeight: 40 },
+  title:        { fontSize: 24, fontWeight: "700" as const, letterSpacing: -0.8, lineHeight: 30 },
+  headline:     { fontSize: 17, fontWeight: "600" as const, letterSpacing: -0.3, lineHeight: 24 },
+  body:         { fontSize: 15, fontWeight: "400" as const, letterSpacing:  0,   lineHeight: 22 },
+  bodyStrong:   { fontSize: 15, fontWeight: "600" as const, letterSpacing: -0.1, lineHeight: 22 },
+  caption:      { fontSize: 13, fontWeight: "400" as const, letterSpacing:  0,   lineHeight: 18 },
+  captionStrong:{ fontSize: 13, fontWeight: "500" as const, letterSpacing:  0.1, lineHeight: 18 },
+  micro:        { fontSize: 11, fontWeight: "600" as const, letterSpacing:  0.8, lineHeight: 14 },
+  // Tabular numbers for CHF amounts — tighter tracking at large sizes
+  amount:       { fontSize: 22, fontWeight: "700" as const, letterSpacing: -0.6, fontVariant: ["tabular-nums" as const] },
+  amountLg:     { fontSize: 32, fontWeight: "800" as const, letterSpacing: -1.2, fontVariant: ["tabular-nums" as const] },
 };

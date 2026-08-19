@@ -2,6 +2,7 @@ import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "
 import { useRef } from "react";
 import type { PropsWithChildren } from "react";
 import { colors, radius, spacing, typography } from "../lib/theme";
+import { SPRING_PRESS_IN, SPRING_PRESS_OUT } from "../lib/motion";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -33,10 +34,10 @@ export function Button({
   const scale = useRef(new Animated.Value(1)).current;
 
   function handlePressIn() {
-    Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
+    Animated.spring(scale, { toValue: 0.97, ...SPRING_PRESS_IN }).start();
   }
   function handlePressOut() {
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+    Animated.spring(scale, { toValue: 1, ...SPRING_PRESS_OUT }).start();
   }
 
   return (
