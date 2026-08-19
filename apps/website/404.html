@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de-CH">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TANKY</title>
+    <script>
+      // GitHub Pages is a static host with no server-side SPA fallback —
+      // any deep link into the app (e.g. reloading on .../app/history) 404s
+      // here instead of reaching the app's router. This is the standard
+      // workaround (https://github.com/rafgraph/spa-github-pages): redirect
+      // to the app's own index.html with the real path packed into the
+      // query string, then public/index.html unpacks it via
+      // history.replaceState before Expo Router ever sees the URL.
+      //
+      // The "/app" segment is detected dynamically so this keeps working
+      // whether the site is served under github.io/tanky/app/ (today) or a
+      // future custom domain's root/app/ — no path to update by hand.
+      // Deep links into the marketing site itself (no client router) just
+      // fall through to the plain message below.
+      (function () {
+        var l = window.location;
+        var match = l.pathname.match(/^(.*\/app)(?:\/|$)/);
+        if (!match) return;
+        var base = match[1];
+        var rest = l.pathname.slice(base.length).replace(/^\//, "");
+        l.replace(
+          l.protocol +
+            "//" +
+            l.host +
+            base +
+            "/?/" +
+            rest.replace(/&/g, "~and~") +
+            (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+            l.hash,
+        );
+      })();
+    </script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #030307;
+        color: #ededef;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+      .box {
+        text-align: center;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      a {
+        color: #8b93e0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Seite nicht gefunden</h1>
+      <p><a href="/">Zurück zu TANKY</a></p>
+    </div>
+  </body>
+</html>
