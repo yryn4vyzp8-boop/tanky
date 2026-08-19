@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { ScreenContainer } from "../../components/ScreenContainer";
 import { Button } from "../../components/Button";
@@ -19,6 +19,18 @@ export default function RegisterScreen() {
 
   async function onSubmit() {
     setError(null);
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Bitte Vor- und Nachname angeben.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Bitte eine gültige E-Mail-Adresse angeben.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Passwort muss mindestens 8 Zeichen haben.");
+      return;
+    }
     setLoading(true);
     try {
       await register({ firstName, lastName, email: email.trim(), password });
@@ -62,21 +74,24 @@ function Field(props: {
   value: string;
   onChangeText: (v: string) => void;
   secureTextEntry?: boolean;
-  autoCapitalize?: "none" | "sentences";
-  keyboardType?: "default" | "email-address";
+  autoCapitalize?: TextInputProps["autoCapitalize"];
+  keyboardType?: TextInputProps["keyboardType"];
   style?: object;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.field, props.style]}>
       <Text style={styles.fieldLabel}>{props.label}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, focused && styles.inputFocused]}
         value={props.value}
         onChangeText={props.onChangeText}
         secureTextEntry={props.secureTextEntry}
         autoCapitalize={props.autoCapitalize ?? "sentences"}
         keyboardType={props.keyboardType ?? "default"}
         placeholderTextColor={colors.textMuted}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
     </View>
   );
@@ -100,6 +115,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     color: colors.textPrimary,
     ...typography.body,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceElevated,
   },
   error: { color: colors.danger, ...typography.caption },
   link: { color: colors.primaryMuted, textAlign: "center", marginTop: spacing.xl, ...typography.captionStrong },
