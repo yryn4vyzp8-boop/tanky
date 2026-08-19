@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { FuelStation, FuelType } from "@tanky/domain";
 import { ScreenContainer } from "../../../components/ScreenContainer";
+import { ErrorState } from "../../../components/ErrorState";
 import { useRequireAuth } from "../../../lib/use-require-auth";
-import { api } from "../../../lib/api-client";
+import { api, ApiError } from "../../../lib/api-client";
 import { formatPricePerLiter } from "../../../lib/format";
 import { colors, radius, spacing, typography } from "../../../lib/theme";
 
@@ -20,12 +21,38 @@ export default function StationScreen() {
   const router = useRouter();
   const [station, setStation] = useState<FuelStation | null>(null);
   const [fuelType, setFuelType] = useState<FuelType>("PETROL_95");
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    if (!id) return;
+    setError(null);
+    api.stations
+      .get(id)
+      .then(({ station }) => setStation(station))
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Tankstelle konnte nicht geladen werden."));
+  }, [id]);
 
   useEffect(() => {
-    if (isReady && id) api.stations.get(id).then(({ station }) => setStation(station));
-  }, [isReady, id]);
+    if (isReady) load();
+  }, [isReady, load]);
 
-  if (!isReady || !station) return null;
+  if (!isReady) return null;
+
+  if (error) {
+    return (
+      <ScreenContainer scroll={false} style={[styles.container, styles.centerContent]}>
+        <ErrorState message={error} onRetry={load} />
+      </ScreenContainer>
+    );
+  }
+
+  if (!station) {
+    return (
+      <ScreenContainer scroll={false} style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator color={colors.primary} />
+      </ScreenContainer>
+    );
+  }
 
   const product = station.fuelProducts.find((p) => p.fuelType === fuelType)!;
 
@@ -82,6 +109,7 @@ export default function StationScreen() {
 
 const styles = StyleSheet.create({
   container: { gap: spacing.lg },
+  centerContent: { flex: 1, alignItems: "center", justifyContent: "center" },
   back: { color: colors.primaryMuted, ...typography.captionStrong, marginBottom: spacing.md },
   stationName: { color: colors.textPrimary, ...typography.title },
   stationAddress: { color: colors.textMuted, ...typography.caption, marginTop: spacing.xs },

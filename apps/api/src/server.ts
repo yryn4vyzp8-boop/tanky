@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import { config } from "./config.js";
 import { runMigrations } from "./db/client.js";
 import { seedDemoData } from "./db/seed.js";
-import { isDemoMode } from "./providers.js";
+import { isDemoMode, isStripeEnabled } from "./providers.js";
 import { HttpError } from "./errors.js";
 import { InvalidTransactionTransitionError } from "@tanky/domain";
 import { ZodError } from "zod";
@@ -26,6 +26,8 @@ await app.register(cors, { origin: config.corsOrigin });
 app.get("/api/v1/health", async () => ({
   status: "ok",
   demoMode: isDemoMode,
+  stripeEnabled: isStripeEnabled,
+  stripePublishableKey: isStripeEnabled ? config.stripePublishableKey : null,
   service: "tanky-api",
 }));
 

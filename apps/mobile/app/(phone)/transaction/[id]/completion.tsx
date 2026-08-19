@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Receipt } from "@tanky/domain";
 import { Button } from "../../../../components/Button";
-import { api } from "../../../../lib/api-client";
+import { api, ApiError } from "../../../../lib/api-client";
 import { formatChf, formatLiters, fuelTypeLabel } from "../../../../lib/format";
 import { colors, spacing, typography } from "../../../../lib/theme";
 
@@ -12,10 +12,18 @@ export default function CompletionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) api.transactions.receipt(id).then(({ receipt }) => setReceipt(receipt));
-  }, [id]);
+  const load = () => {
+    if (!id) return;
+    setError(null);
+    api.transactions
+      .receipt(id)
+      .then(({ receipt }) => setReceipt(receipt))
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Details konnten nicht geladen werden."));
+  };
+
+  useEffect(load, [id]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -24,6 +32,15 @@ export default function CompletionScreen() {
           <Text style={styles.checkMark}>✓</Text>
         </View>
         <Text style={styles.title}>TANKEN ABGESCHLOSSEN</Text>
+
+        {error && !receipt && (
+          <View style={{ alignItems: "center", gap: spacing.sm, marginTop: spacing.md }}>
+            <Text style={styles.subline}>Details konnten nicht geladen werden — die Zahlung ist trotzdem erfolgt.</Text>
+            <Text style={styles.retryLink} onPress={load}>
+              Erneut versuchen
+            </Text>
+          </View>
+        )}
 
         {receipt && (
           <>
@@ -66,6 +83,7 @@ const styles = StyleSheet.create({
   title: { color: colors.textSecondary, ...typography.captionStrong, letterSpacing: 1 },
   amount: { color: colors.textPrimary, fontSize: 48, fontWeight: "800", marginTop: spacing.md },
   subline: { color: colors.textSecondary, ...typography.body, marginTop: spacing.xs },
+  retryLink: { color: colors.primaryMuted, ...typography.captionStrong },
   paidRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.lg },
   paidMethod: { color: colors.textPrimary, ...typography.bodyStrong },
   paidDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.success },

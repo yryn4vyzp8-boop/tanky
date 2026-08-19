@@ -9,6 +9,15 @@
 # the SQLite database resets to the seeded demo data each time. That's fine
 # for a demo; a paid plan with a persistent disk mounted at
 # apps/api/data would keep data across deploys.
+#
+# Stripe test-mode payments (optional): set these two env vars in the
+# Render dashboard (Environment tab) — they aren't declared with values
+# here since they're per-account secrets, not something to commit:
+#   TANKY_PAYMENT_PROVIDER = stripe
+#   STRIPE_SECRET_KEY      = sk_test_...   (Stripe Dashboard -> Developers -> API keys)
+#   STRIPE_PUBLISHABLE_KEY = pk_test_...   (same page — not secret, served to the client)
+# Leave TANKY_PAYMENT_PROVIDER unset (or "mock") to keep using the fully
+# simulated MockPaymentProvider instead.
 services:
   - type: web
     name: tanky-api

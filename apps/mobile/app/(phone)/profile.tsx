@@ -6,9 +6,10 @@ import type { PaymentMethod, Vehicle } from "@tanky/domain";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { BottomNav } from "../../components/BottomNav";
+import { ErrorState } from "../../components/ErrorState";
 import { useRequireAuth } from "../../lib/use-require-auth";
 import { useAuth } from "../../lib/auth-context";
-import { api } from "../../lib/api-client";
+import { api, ApiError } from "../../lib/api-client";
 import { fuelTypeLabel } from "../../lib/format";
 import { colors, spacing, typography } from "../../lib/theme";
 
@@ -26,10 +27,14 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    api.vehicles.list().then(({ vehicles }) => setVehicles(vehicles));
-    api.paymentMethods.list().then(({ paymentMethods }) => setMethods(paymentMethods));
+    setError(null);
+    const onError = (err: unknown) =>
+      setError(err instanceof ApiError ? err.message : "Daten konnten nicht geladen werden.");
+    api.vehicles.list().then(({ vehicles }) => setVehicles(vehicles)).catch(onError);
+    api.paymentMethods.list().then(({ paymentMethods }) => setMethods(paymentMethods)).catch(onError);
   }, []);
 
   useFocusEffect(
@@ -43,6 +48,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        {error && <ErrorState message={error} onRetry={load} />}
         <View style={styles.avatarRow}>
           <View style={styles.avatar}>
             <Text style={styles.avatarInitials}>

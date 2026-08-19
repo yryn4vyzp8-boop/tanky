@@ -4,8 +4,9 @@ import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../components/Button";
 import { StatusPill } from "../components/StatusPill";
+import { ErrorState } from "../components/ErrorState";
 import { useAuth } from "../lib/auth-context";
-import { api, type TransactionRecord } from "../lib/api-client";
+import { api, ApiError, type TransactionRecord } from "../lib/api-client";
 import { formatChf, formatDateTime, formatLiters } from "../lib/format";
 import { colors, radius, spacing, typography } from "../lib/theme";
 
@@ -17,11 +18,18 @@ export default function AdminScreen() {
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  const loadData = () => {
+    setDataError(null);
+    const onError = (err: unknown) =>
+      setDataError(err instanceof ApiError ? err.message : "Daten konnten nicht geladen werden.");
+    api.admin.summary().then(setSummary).catch(onError);
+    api.admin.transactions().then(({ transactions }) => setTransactions(transactions)).catch(onError);
+  };
 
   useEffect(() => {
-    if (!isAdmin) return;
-    api.admin.summary().then(setSummary);
-    api.admin.transactions().then(({ transactions }) => setTransactions(transactions));
+    if (isAdmin) loadData();
   }, [isAdmin]);
 
   if (isLoading) return null;
@@ -69,6 +77,8 @@ export default function AdminScreen() {
           <Text style={styles.eyebrow}>TANKY</Text>
           <Text style={styles.title}>Admin Dashboard</Text>
         </View>
+
+        {dataError && <ErrorState message={dataError} onRetry={loadData} />}
 
         {summary && (
           <View style={styles.statsGrid}>

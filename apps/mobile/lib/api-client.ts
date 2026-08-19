@@ -70,7 +70,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  } catch {
+    // The request never reached the server at all (offline, DNS failure, or
+    // — very common on Render's free tier — the API is cold-starting after
+    // being idle, which can take up to a minute for the very first request).
+    throw new ApiError(
+      0,
+      "NETWORK_ERROR",
+      "Keine Verbindung zum Server. Falls die App länger nicht genutzt wurde, kann der Server kurz zum Aufwachen brauchen — versuche es in ein paar Sekunden nochmal.",
+    );
+  }
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
@@ -80,6 +92,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  health: () =>
+    request<{
+      status: string;
+      demoMode: boolean;
+      stripeEnabled: boolean;
+      stripePublishableKey: string | null;
+      service: string;
+    }>("/api/v1/health"),
+
   auth: {
     register: (input: { email: string; password: string; firstName: string; lastName: string; phone?: string }) =>
       request<{ token: string; user: User }>("/api/v1/auth/register", {
@@ -107,7 +128,12 @@ export const api = {
 
   paymentMethods: {
     list: () => request<{ paymentMethods: PaymentMethod[] }>("/api/v1/payment-methods"),
-    create: (input: { brand: PaymentMethodBrand; last4: string; isDefault?: boolean }) =>
+    create: (input: {
+      brand: PaymentMethodBrand;
+      last4: string;
+      isDefault?: boolean;
+      providerToken?: string;
+    }) =>
       request<{ paymentMethod: PaymentMethod }>("/api/v1/payment-methods", {
         method: "POST",
         body: JSON.stringify(input),

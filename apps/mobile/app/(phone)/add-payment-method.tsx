@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import type { PaymentMethodBrand } from "@tanky/domain";
 import { ScreenContainer } from "../../components/ScreenContainer";
 import { Button } from "../../components/Button";
+import { StripeCardForm } from "../../components/StripeCardForm";
 import { api, ApiError } from "../../lib/api-client";
 import { colors, radius, spacing, typography } from "../../lib/theme";
 
@@ -17,25 +18,22 @@ const BRANDS: { value: PaymentMethodBrand; label: string }[] = [
 
 export default function AddPaymentMethodScreen() {
   const router = useRouter();
-  const [brand, setBrand] = useState<PaymentMethodBrand>("VISA");
-  const [last4, setLast4] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [stripeKey, setStripeKey] = useState<string | null | undefined>(undefined); // undefined = still checking
 
-  async function onSubmit() {
-    if (!/^\d{4}$/.test(last4)) {
-      setError("Bitte die letzten 4 Ziffern der Karte eingeben.");
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      setStripeKey(null);
       return;
     }
-    setSubmitting(true);
-    setError(null);
-    try {
-      await api.paymentMethods.create({ brand, last4 });
-      router.back();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Zahlungsmethode konnte nicht gespeichert werden");
-      setSubmitting(false);
-    }
+    api
+      .health()
+      .then((h) => setStripeKey(h.stripeEnabled ? h.stripePublishableKey : null))
+      .catch(() => setStripeKey(null));
+  }, []);
+
+  async function saveTokenizedMethod(result: { brand: PaymentMethodBrand; last4: string; providerToken?: string }) {
+    await api.paymentMethods.create(result);
+    router.back();
   }
 
   return (
@@ -45,12 +43,57 @@ export default function AddPaymentMethodScreen() {
           <Text style={styles.back}>← Zurück</Text>
         </Pressable>
         <Text style={styles.title}>Zahlungsmethode hinzufügen</Text>
-        <Text style={styles.subtitle}>
-          DEMO — keine echten Kartendaten. In Produktion würde dies über die native Karten-Tokenisierung des
-          Zahlungsanbieters laufen; der Server sieht nie die vollständige Kartennummer.
-        </Text>
+        {stripeKey ? (
+          <Text style={styles.subtitle}>
+            Stripe Testmodus — echte Tokenisierung, keine echten Zahlungen. Der Server sieht nie die
+            vollständige Kartennummer.
+          </Text>
+        ) : (
+          <Text style={styles.subtitle}>
+            DEMO — keine echten Kartendaten. In Produktion würde dies über die native Karten-Tokenisierung des
+            Zahlungsanbieters laufen; der Server sieht nie die vollständige Kartennummer.
+          </Text>
+        )}
       </View>
 
+      {stripeKey === undefined && <Text style={styles.hint}>Wird geladen…</Text>}
+
+      {stripeKey ? (
+        <StripeCardForm publishableKey={stripeKey} onTokenized={saveTokenizedMethod} />
+      ) : stripeKey === null ? (
+        <MockCardForm onSubmit={saveTokenizedMethod} />
+      ) : null}
+    </ScreenContainer>
+  );
+}
+
+function MockCardForm({
+  onSubmit,
+}: {
+  onSubmit: (result: { brand: PaymentMethodBrand; last4: string; providerToken?: string }) => Promise<void>;
+}) {
+  const [brand, setBrand] = useState<PaymentMethodBrand>("VISA");
+  const [last4, setLast4] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (!/^\d{4}$/.test(last4)) {
+      setError("Bitte die letzten 4 Ziffern der Karte eingeben.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onSubmit({ brand, last4 });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Zahlungsmethode konnte nicht gespeichert werden");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <>
       <Text style={styles.sectionTitle}>Anbieter</Text>
       <View style={styles.brandGrid}>
         {BRANDS.map((b) => (
@@ -75,10 +118,10 @@ export default function AddPaymentMethodScreen() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Button onPress={onSubmit} loading={submitting}>
+      <Button onPress={handleSubmit} loading={submitting}>
         Zahlungsmethode speichern
       </Button>
-    </ScreenContainer>
+    </>
   );
 }
 
@@ -87,6 +130,7 @@ const styles = StyleSheet.create({
   back: { color: colors.primaryMuted, ...typography.captionStrong, marginBottom: spacing.md },
   title: { color: colors.textPrimary, ...typography.title },
   subtitle: { color: colors.textMuted, ...typography.caption, marginTop: spacing.xs },
+  hint: { color: colors.textMuted, ...typography.caption },
   sectionTitle: { color: colors.textSecondary, ...typography.captionStrong },
   brandGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   brandChip: {

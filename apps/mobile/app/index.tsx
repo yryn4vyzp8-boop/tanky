@@ -3,20 +3,22 @@ import { Platform, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../lib/theme";
-import { API_BASE_URL } from "../lib/api-client";
+import { API_BASE_URL, api } from "../lib/api-client";
 
 type ApiStatus = "checking" | "online" | "offline";
 
 export default function Launcher() {
   const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
   const [demoMode, setDemoMode] = useState(true);
+  const [stripeEnabled, setStripeEnabled] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/v1/health`)
-      .then((r) => r.json())
+    api
+      .health()
       .then((body) => {
         setApiStatus("online");
-        setDemoMode(Boolean(body.demoMode));
+        setDemoMode(body.demoMode);
+        setStripeEnabled(body.stripeEnabled);
       })
       .catch(() => setApiStatus("offline"));
   }, []);
@@ -51,8 +53,15 @@ export default function Launcher() {
         </View>
 
         <View style={styles.footer}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{demoMode ? "DEMO MODE" : "PRODUCTION"}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{demoMode ? "DEMO MODE" : "PRODUCTION"}</Text>
+            </View>
+            {stripeEnabled && (
+              <View style={[styles.badge, styles.stripeBadge]}>
+                <Text style={[styles.badgeText, styles.stripeBadgeText]}>STRIPE TEST MODE</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.footerText}>
             Environment: {envLabel()} · {API_BASE_URL}
@@ -132,12 +141,15 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   footer: { marginTop: spacing.xxxl, alignItems: "center", gap: spacing.sm },
+  badgeRow: { flexDirection: "row", gap: spacing.sm },
   badge: {
     backgroundColor: colors.warningTint,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
+  stripeBadge: { backgroundColor: colors.primaryTint },
+  stripeBadgeText: { color: colors.primaryMuted },
   badgeText: { color: colors.warning, ...typography.micro },
   footerText: { color: colors.textMuted, ...typography.caption },
 });

@@ -36,10 +36,13 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     if (!isReady) return;
-    api.paymentMethods.list().then(({ paymentMethods }) => {
-      setMethods(paymentMethods);
-      setSelectedMethodId(paymentMethods.find((m) => m.isDefault)?.id ?? paymentMethods[0]?.id ?? null);
-    });
+    api.paymentMethods
+      .list()
+      .then(({ paymentMethods }) => {
+        setMethods(paymentMethods);
+        setSelectedMethodId(paymentMethods.find((m) => m.isDefault)?.id ?? paymentMethods[0]?.id ?? null);
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Zahlungsmethoden konnten nicht geladen werden."));
   }, [isReady]);
 
   if (!isReady) return null;

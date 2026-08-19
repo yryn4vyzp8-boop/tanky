@@ -5,8 +5,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Card } from "../../components/Card";
 import { StatusPill } from "../../components/StatusPill";
 import { BottomNav } from "../../components/BottomNav";
+import { ErrorState } from "../../components/ErrorState";
 import { useRequireAuth } from "../../lib/use-require-auth";
-import { api, type TransactionRecord } from "../../lib/api-client";
+import { api, ApiError, type TransactionRecord } from "../../lib/api-client";
 import { formatChf, formatDateTime, formatLiters, fuelTypeLabel } from "../../lib/format";
 import { colors, spacing, typography } from "../../lib/theme";
 
@@ -14,9 +15,14 @@ export default function HistoryScreen() {
   const { isReady } = useRequireAuth();
   const router = useRouter();
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    api.transactions.list().then(({ transactions }) => setTransactions(transactions));
+    setError(null);
+    api.transactions
+      .list()
+      .then(({ transactions }) => setTransactions(transactions))
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Historie konnte nicht geladen werden."));
   }, []);
 
   useFocusEffect(
@@ -33,7 +39,9 @@ export default function HistoryScreen() {
         <Text style={styles.title}>Tankhistorie</Text>
       </View>
 
-      <FlatList
+      {error && <ErrorState message={error} onRetry={load} />}
+
+      {!error && <FlatList
         data={transactions}
         keyExtractor={(t) => t.id}
         contentContainerStyle={styles.list}
@@ -58,7 +66,7 @@ export default function HistoryScreen() {
           </Pressable>
         )}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-      />
+      />}
       <BottomNav />
     </SafeAreaView>
   );

@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { Receipt } from "@tanky/domain";
 import { ScreenContainer } from "../../../../components/ScreenContainer";
-import { api } from "../../../../lib/api-client";
+import { ErrorState } from "../../../../components/ErrorState";
+import { api, ApiError } from "../../../../lib/api-client";
 import { formatChf, formatDateTime, formatLiters, formatPricePerLiter, fuelTypeLabel } from "../../../../lib/format";
 import { colors, radius, spacing, typography } from "../../../../lib/theme";
 
@@ -11,10 +12,26 @@ export default function ReceiptScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) api.transactions.receipt(id).then(({ receipt }) => setReceipt(receipt));
-  }, [id]);
+  const load = () => {
+    if (!id) return;
+    setError(null);
+    api.transactions
+      .receipt(id)
+      .then(({ receipt }) => setReceipt(receipt))
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Beleg konnte nicht geladen werden."));
+  };
+
+  useEffect(load, [id]);
+
+  if (error) {
+    return (
+      <ScreenContainer style={{ flex: 1, justifyContent: "center" }}>
+        <ErrorState message={error} onRetry={load} />
+      </ScreenContainer>
+    );
+  }
 
   if (!receipt) return null;
 

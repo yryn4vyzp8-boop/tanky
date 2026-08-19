@@ -6,9 +6,10 @@ import type { FuelStation } from "@tanky/domain";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { BottomNav } from "../../components/BottomNav";
+import { ErrorState } from "../../components/ErrorState";
 import { useRequireAuth } from "../../lib/use-require-auth";
 import { useAuth } from "../../lib/auth-context";
-import { api } from "../../lib/api-client";
+import { api, ApiError } from "../../lib/api-client";
 import { formatPricePerLiter } from "../../lib/format";
 import { colors, radius, spacing, typography } from "../../lib/theme";
 
@@ -43,15 +44,23 @@ export default function HomeScreen() {
   const [stations, setStations] = useState<FuelStation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    api.stations.list().then(({ stations }) => {
-      const sorted = [...stations].sort(
-        (a, b) => (DISTANCE_KM[a.id] ?? 99) - (DISTANCE_KM[b.id] ?? 99),
-      );
-      setStations(sorted);
-      setLoading(false);
-    });
+    setError(null);
+    api.stations
+      .list()
+      .then(({ stations }) => {
+        const sorted = [...stations].sort(
+          (a, b) => (DISTANCE_KM[a.id] ?? 99) - (DISTANCE_KM[b.id] ?? 99),
+        );
+        setStations(sorted);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof ApiError ? err.message : "Tankstellen konnten nicht geladen werden.");
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -82,7 +91,7 @@ export default function HomeScreen() {
         <Text style={styles.greeting}>Hallo, {user?.firstName ?? ""}</Text>
         <Text style={styles.headline}>Tankstelle in deiner Nähe</Text>
 
-        {loading && (
+        {loading && !error && (
           <Card style={styles.heroCard}>
             <SkeletonBlock width="40%" height={13} style={{ marginBottom: spacing.sm }} />
             <SkeletonBlock width="70%" height={20} style={{ marginBottom: spacing.xs }} />
@@ -92,7 +101,9 @@ export default function HomeScreen() {
           </Card>
         )}
 
-        {!loading && nearest && (
+        {error && <ErrorState message={error} onRetry={load} />}
+
+        {!loading && !error && nearest && (
           <Card style={styles.heroCard}>
             <View style={styles.heroTopRow}>
               <Text style={styles.heroDistance}>{DISTANCE_KM[nearest.id]?.toFixed(1)} km</Text>
