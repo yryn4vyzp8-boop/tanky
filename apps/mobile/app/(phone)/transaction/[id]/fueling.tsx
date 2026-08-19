@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { api, ApiError, type FuelingProgress } from "../../../../lib/api-client";
@@ -18,6 +18,27 @@ export default function FuelingScreen() {
   const [failureReason, setFailureReason] = useState<string | null>(null);
   const started = useRef(false);
   const pollHandle = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  const amountScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 1400,
+        easing: Easing.bezier(0.23, 1, 0.32, 1),
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  useEffect(() => {
+    if (!progress?.amountRappen) return;
+    Animated.sequence([
+      Animated.timing(amountScale, { toValue: 1.04, duration: 80, useNativeDriver: true }),
+      Animated.timing(amountScale, { toValue: 1, duration: 140, useNativeDriver: true }),
+    ]).start();
+  }, [progress?.amountRappen]);
 
   useEffect(() => {
     if (started.current || !id) return;
@@ -96,9 +117,22 @@ export default function FuelingScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.center}>
-        <View style={styles.pulseRing} />
+        <View style={styles.pulseWrap}>
+          <Animated.View
+            style={[
+              styles.pulseOuter,
+              {
+                transform: [{ scale: pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 2.8] }) }],
+                opacity: pulseAnim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.5, 0] }),
+              },
+            ]}
+          />
+          <View style={styles.pulseRing} />
+        </View>
         <Text style={styles.amountLabel}>{phase === "finishing" ? "Wird abgeschlossen…" : "Tankvorgang läuft"}</Text>
-        <Text style={styles.amount}>{formatChf(progress?.amountRappen ?? 0)}</Text>
+        <Animated.Text style={[styles.amount, { transform: [{ scale: amountScale }] }]}>
+          {formatChf(progress?.amountRappen ?? 0)}
+        </Animated.Text>
         <View style={styles.metaRow}>
           <Text style={styles.meta}>{formatLiters(progress?.liters ?? 0)}</Text>
           <View style={styles.metaDot} />
@@ -115,12 +149,19 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, gap: spacing.sm },
   starting: { color: colors.textPrimary, ...typography.headline, marginTop: spacing.lg },
-  pulseRing: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.success,
+  pulseWrap: {
+    width: 48, height: 48,
+    alignItems: "center", justifyContent: "center",
     marginBottom: spacing.md,
+  },
+  pulseOuter: {
+    position: "absolute",
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: colors.success,
+  },
+  pulseRing: {
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: colors.success,
   },
   amountLabel: { color: colors.textSecondary, ...typography.captionStrong, textTransform: "uppercase" },
   amount: { color: colors.textPrimary, fontSize: 56, fontWeight: "800", letterSpacing: -1.5 },

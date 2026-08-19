@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Receipt } from "@tanky/domain";
@@ -13,6 +13,27 @@ export default function CompletionScreen() {
   const router = useRouter();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const checkScale = useRef(new Animated.Value(0)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const contentY = useRef(new Animated.Value(20)).current;
+  const actionsOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.spring(checkScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 90,
+        friction: 7,
+      }),
+      Animated.parallel([
+        Animated.timing(contentOpacity, { toValue: 1, duration: 420, useNativeDriver: true }),
+        Animated.timing(contentY, { toValue: 0, duration: 420, useNativeDriver: true }),
+      ]),
+      Animated.timing(actionsOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const load = () => {
     if (!id) return;
@@ -28,41 +49,46 @@ export default function CompletionScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.center}>
-        <View style={styles.checkCircle}>
+        <Animated.View style={[styles.checkCircle, { transform: [{ scale: checkScale }] }]}>
           <Text style={styles.checkMark}>✓</Text>
-        </View>
-        <Text style={styles.title}>TANKEN ABGESCHLOSSEN</Text>
+        </Animated.View>
 
-        {error && !receipt && (
-          <View style={{ alignItems: "center", gap: spacing.sm, marginTop: spacing.md }}>
-            <Text style={styles.subline}>Details konnten nicht geladen werden — die Zahlung ist trotzdem erfolgt.</Text>
-            <Text style={styles.retryLink} onPress={load}>
-              Erneut versuchen
-            </Text>
-          </View>
-        )}
+        <Animated.View
+          style={{ alignItems: "center", gap: spacing.sm, opacity: contentOpacity, transform: [{ translateY: contentY }] }}
+        >
+          <Text style={styles.title}>TANKEN ABGESCHLOSSEN</Text>
 
-        {receipt && (
-          <>
-            <Text style={styles.amount}>{formatChf(receipt.totalAmountRappen)}</Text>
-            <Text style={styles.subline}>
-              {formatLiters(receipt.liters)} · {fuelTypeLabel(receipt.fuelType)}
-            </Text>
-            <View style={styles.paidRow}>
-              <Text style={styles.paidMethod}>{receipt.paymentMethodLabel}</Text>
-              <View style={styles.paidDot} />
-              <Text style={styles.paidStatus}>Bezahlt</Text>
+          {error && !receipt && (
+            <View style={{ alignItems: "center", gap: spacing.sm, marginTop: spacing.md }}>
+              <Text style={styles.subline}>Details konnten nicht geladen werden — die Zahlung ist trotzdem erfolgt.</Text>
+              <Text style={styles.retryLink} onPress={load}>
+                Erneut versuchen
+              </Text>
             </View>
-          </>
-        )}
+          )}
+
+          {receipt && (
+            <>
+              <Text style={styles.amount}>{formatChf(receipt.totalAmountRappen)}</Text>
+              <Text style={styles.subline}>
+                {formatLiters(receipt.liters)} · {fuelTypeLabel(receipt.fuelType)}
+              </Text>
+              <View style={styles.paidRow}>
+                <Text style={styles.paidMethod}>{receipt.paymentMethodLabel}</Text>
+                <View style={styles.paidDot} />
+                <Text style={styles.paidStatus}>Bezahlt</Text>
+              </View>
+            </>
+          )}
+        </Animated.View>
       </View>
 
-      <View style={styles.actions}>
+      <Animated.View style={[styles.actions, { opacity: actionsOpacity }]}>
         <Button variant="secondary" onPress={() => router.push(`/(phone)/transaction/${id}/receipt`)}>
           Beleg anzeigen
         </Button>
         <Button onPress={() => router.replace("/(phone)/home")}>Fertig</Button>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

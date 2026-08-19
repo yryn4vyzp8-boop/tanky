@@ -1,10 +1,40 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../../../components/Button";
 import { api, ApiError } from "../../../../lib/api-client";
-import { colors, spacing, typography } from "../../../../lib/theme";
+import { colors, radius, spacing, typography } from "../../../../lib/theme";
+
+const STRONG_EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+
+function SonarRing({ delay }: { delay: number }) {
+  const progress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      Animated.loop(
+        Animated.timing(progress, {
+          toValue: 1,
+          duration: 1900,
+          easing: STRONG_EASE_OUT,
+          useNativeDriver: true,
+        })
+      ).start();
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, []);
+  return (
+    <Animated.View
+      style={[
+        styles.sonarRing,
+        {
+          transform: [{ scale: progress.interpolate({ inputRange: [0, 1], outputRange: [0.25, 2.6] }) }],
+          opacity: progress.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] }),
+        },
+      ]}
+    />
+  );
+}
 
 const FAILURE_STATUSES = new Set(["PAYMENT_FAILED", "PUMP_AUTHORIZATION_FAILED"]);
 
@@ -60,7 +90,12 @@ export default function AuthorizingScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.sonarWrap}>
+          <SonarRing delay={0} />
+          <SonarRing delay={640} />
+          <SonarRing delay={1280} />
+          <View style={styles.sonarDot} />
+        </View>
         <Text style={styles.status}>
           {step === "payment" ? "Zahlung wird autorisiert…" : "Zapfsäule wird freigeschaltet…"}
         </Text>
@@ -73,15 +108,24 @@ export default function AuthorizingScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, gap: spacing.md },
-  status: { color: colors.textPrimary, ...typography.headline, marginTop: spacing.lg },
-  hint: { color: colors.textMuted, ...typography.caption },
+  sonarWrap: { width: 96, height: 96, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  sonarRing: {
+    position: "absolute",
+    width: 96, height: 96, borderRadius: 48,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+  },
+  sonarDot: {
+    width: 14, height: 14, borderRadius: 7,
+    backgroundColor: colors.primary,
+  },
+  status: { color: colors.textPrimary, ...typography.headline, textAlign: "center" },
+  hint: { color: colors.textMuted, ...typography.caption, textAlign: "center" },
   errorIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 56, height: 56,
+    borderRadius: radius.xl,
     backgroundColor: colors.dangerTint,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "center", justifyContent: "center",
   },
   errorIconText: { color: colors.danger, fontSize: 24, fontWeight: "700" },
   failureTitle: { color: colors.textPrimary, ...typography.title, textAlign: "center" },
