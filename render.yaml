@@ -1,0 +1,29 @@
+# Render Blueprint — deploys the TANKY API as a live web service.
+#
+# How to use: create a free account at render.com, "New" -> "Blueprint",
+# connect the yryn4vyzp8-boop/tanky GitHub repo, Render reads this file
+# automatically. No credentials are shared with anyone else in this process —
+# it all happens in your own Render dashboard.
+#
+# Note: the free plan's disk is ephemeral (wiped on every deploy/restart), so
+# the SQLite database resets to the seeded demo data each time. That's fine
+# for a demo; a paid plan with a persistent disk mounted at
+# apps/api/data would keep data across deploys.
+services:
+  - type: web
+    name: tanky-api
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build -w @tanky/domain
+    startCommand: npm run start -w @tanky/api
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: TANKY_DEMO_MODE
+        value: "true"
+      - key: TANKY_CORS_ORIGIN
+        value: "*"
+      - key: JWT_SECRET
+        generateValue: true
