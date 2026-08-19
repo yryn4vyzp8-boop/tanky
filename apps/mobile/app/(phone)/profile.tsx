@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { PaymentMethod, Vehicle } from "@tanky/domain";
 import { Card } from "../../components/Card";
@@ -27,11 +27,16 @@ export default function ProfileScreen() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
 
-  useEffect(() => {
-    if (!isReady) return;
+  const load = useCallback(() => {
     api.vehicles.list().then(({ vehicles }) => setVehicles(vehicles));
     api.paymentMethods.list().then(({ paymentMethods }) => setMethods(paymentMethods));
-  }, [isReady]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isReady) load();
+    }, [isReady, load]),
+  );
 
   if (!isReady) return null;
 
@@ -53,7 +58,12 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Fahrzeuge</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Fahrzeuge</Text>
+          <Pressable onPress={() => router.push("/(phone)/add-vehicle")} hitSlop={8}>
+            <Text style={styles.addLink}>+ Hinzufügen</Text>
+          </Pressable>
+        </View>
         <View style={{ gap: spacing.sm }}>
           {vehicles.map((v) => (
             <Card key={v.id} style={styles.itemCard}>
@@ -68,7 +78,12 @@ export default function ProfileScreen() {
           {vehicles.length === 0 && <Text style={styles.empty}>Keine Fahrzeuge hinterlegt.</Text>}
         </View>
 
-        <Text style={styles.sectionTitle}>Zahlungsmethoden</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Zahlungsmethoden</Text>
+          <Pressable onPress={() => router.push("/(phone)/add-payment-method")} hitSlop={8}>
+            <Text style={styles.addLink}>+ Hinzufügen</Text>
+          </Pressable>
+        </View>
         <View style={{ gap: spacing.sm }}>
           {methods.map((m) => (
             <Card key={m.id} style={styles.itemCard}>
@@ -78,6 +93,7 @@ export default function ProfileScreen() {
               {m.isDefault && <Text style={styles.itemMeta}>Standard</Text>}
             </Card>
           ))}
+          {methods.length === 0 && <Text style={styles.empty}>Keine Zahlungsmethoden hinterlegt.</Text>}
         </View>
 
         <View style={{ marginTop: spacing.xl }}>
@@ -112,7 +128,9 @@ const styles = StyleSheet.create({
   avatarInitials: { color: colors.primaryMuted, ...typography.headline },
   name: { color: colors.textPrimary, ...typography.headline },
   email: { color: colors.textMuted, ...typography.caption },
-  sectionTitle: { color: colors.textSecondary, ...typography.captionStrong, marginTop: spacing.sm },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.sm },
+  sectionTitle: { color: colors.textSecondary, ...typography.captionStrong },
+  addLink: { color: colors.primaryMuted, ...typography.captionStrong },
   itemCard: { paddingVertical: spacing.md, gap: 2 },
   itemTitle: { color: colors.textPrimary, ...typography.bodyStrong },
   itemMeta: { color: colors.textMuted, ...typography.caption },

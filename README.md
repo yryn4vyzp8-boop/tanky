@@ -19,6 +19,9 @@ npm run dev:api          # http://localhost:4000
 
 # 4. Start the app (in another terminal)
 npm run dev:mobile       # opens http://localhost:8081
+
+# 5. Start the marketing site (optional, in another terminal)
+npm run dev:website      # http://localhost:3000
 ```
 
 Open **http://localhost:8081** in a browser at a desktop width (≥860px) to see the iPhone device-frame demo view. On a real phone or narrow viewport it renders edge-to-edge like a normal installed PWA.
@@ -54,6 +57,10 @@ apps/api              Fastify + TypeScript + SQLite (via node:sqlite — no nati
 apps/mobile           Expo (React Native + Expo Router) with web output as an
                       installable PWA (manifest + service worker in public/).
                       Same codebase is the future path to native iOS/Android.
+
+apps/website           Static marketing site (no framework, no build step) —
+                      hero, benefits, how-it-works, download/install CTAs.
+                      Deployable to any static host.
 ```
 
 Swapping in real providers later (Stripe, TWINT, a forecourt integration) means writing a new class that implements `PaymentProvider` / `FuelStationProvider` and wiring it in `apps/api/src/providers.ts` — nothing else changes.
@@ -68,6 +75,21 @@ The critical isolation case — User A and User B using the same pump back-to-ba
 
 Payment amounts are integer **Rappen** (CHF cents). Pump prices need a third decimal (CHF 1.699/L), so those use a separate integer unit, **MilliFrancs** (1 = CHF 0.001), only ever rounded down to Rappen at the moment a final amount is charged. See `packages/domain/src/types.ts`.
 
+## Marketing site (`apps/website`)
+
+A standalone, dependency-free static site: hero, "Vorteile" (benefits), "So funktioniert's" (how it works), and a download section. The primary, **working today** call to action is installing the PWA (`apps/mobile`) — real App Store / Google Play badges are shown as "Bald verfügbar" rather than dead links, since there's no live store listing yet (see below). Update `APP_URL` in `apps/website/app.js` once the app is deployed to its real domain (e.g. `https://app.tanky.ch`).
+
+## Path to real iOS / Android store listings
+
+The app is already Expo-based specifically so this is a configuration step, not a rewrite. `apps/mobile/eas.json` has build profiles ready (`development`, `preview`, `production`). To actually publish:
+
+1. You need your own **Apple Developer Program** account (CHF ~99/year) and **Google Play Console** account (one-time ~USD 25) — these can't be created or paid for on your behalf.
+2. Create a free **Expo account** and run `npx eas login` inside `apps/mobile`.
+3. `npx eas build --platform ios` / `--platform android` — builds signed binaries in the cloud (no local Xcode/Android Studio needed for this step).
+4. `npx eas submit --platform ios` / `--platform android` — submits to App Store Connect / Play Console for review.
+
+Until that's done, the PWA (already fully working, installable, and indistinguishable from a native app to a user) is the real distribution channel — that's what the marketing site links to today.
+
 ## What's deliberately not built yet
 
 Per the MVP scope, these are intentionally out — the schema and provider interfaces don't block adding them, they're just not wired up:
@@ -77,7 +99,7 @@ Per the MVP scope, these are intentionally out — the schema and provider inter
 - Fleet management, business billing, loyalty redemption (DB tables exist as stubs: `business_accounts`, `business_users`, `loyalty_accounts`, `loyalty_transactions`)
 - EV charging / parking / other mobility services
 - Translated content for FR/IT/EN (currently German-only UI strings; no hardcoded-string blockers to adding i18n)
-- Native iOS/Android builds (Expo is set up for this, just not built/signed)
+- Native iOS/Android builds and App Store/Play Store listings (build profiles are ready in `apps/mobile/eas.json`; publishing needs your own Apple/Google developer accounts — see "Path to real iOS / Android store listings" above)
 - App icon / logo artwork (currently the default Expo placeholder icon — visual branding was deprioritized behind the transaction engine, security, and the core flow per the stated priority order)
 - Postgres/Supabase (currently SQLite via `node:sqlite` for a zero-dependency local dev story; the schema is plain SQL and the repository layer is a thin wrapper, so migrating is a driver swap, not a rewrite)
 

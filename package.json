@@ -10,6 +10,7 @@
   "scripts": {
     "dev:api": "npm run dev -w @tanky/api",
     "dev:mobile": "npm run dev -w @tanky/mobile",
+    "dev:website": "npm run dev -w @tanky/website",
     "build:domain": "npm run build -w @tanky/domain",
     "test:domain": "npm run test -w @tanky/domain",
     "test:api": "npm run test -w @tanky/api"

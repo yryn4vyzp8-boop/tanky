@@ -36,7 +36,7 @@ export function PhoneFrame({ children }: PropsWithChildren) {
       )}
 
       <View style={styles.phoneShadowWrap}>
-        <View style={styles.bezel}>
+        <View style={styles.bezel} nativeID="tanky-phone-bezel">
           <View style={styles.dynamicIsland} pointerEvents="none" />
           <View style={styles.screen}>
             <View style={styles.screenContent}>{children}</View>
