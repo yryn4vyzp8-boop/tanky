@@ -43,10 +43,10 @@ jobs:
       - name: Build shared domain package
         run: npm run build -w @tanky/domain
 
-      - name: Export app as a static PWA (served under /app/)
+      - name: Export app as a static PWA (served under /tanky/app/)
         working-directory: apps/mobile
         env:
-          TANKY_BASE_PATH: /app
+          TANKY_BASE_PATH: /tanky/app
           EXPO_PUBLIC_API_URL: ${{ env.TANKY_API_URL }}
         run: npx expo export -p web
 
