@@ -40,6 +40,11 @@ export function StripeCardForm({ publishableKey, onTokenized }: StripeCardFormPr
       const elements = stripe.elements();
       elementsRef.current = elements;
       const card = elements.create("card", {
+        // No postal code field — Stripe defaults to requiring one (for AVS
+        // fraud checks) but never surfaces that requirement in the UI text,
+        // which just silently blocks submission. Not worth the friction
+        // here since this never moves real money.
+        hidePostalCode: true,
         style: {
           base: {
             color: colors.textPrimary,
