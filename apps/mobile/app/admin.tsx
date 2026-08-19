@@ -12,7 +12,7 @@ import { colors, radius, spacing, typography } from "../lib/theme";
 type Summary = Awaited<ReturnType<typeof api.admin.summary>>;
 
 export default function AdminScreen() {
-  const { user, isAdmin, isLoading, login } = useAuth();
+  const { user, isAdmin, isLoading, login, logout } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -32,26 +32,27 @@ export default function AdminScreen() {
         <View style={styles.gate}>
           <Text style={styles.gateTitle}>Admin-Zugriff erforderlich</Text>
           <Text style={styles.gateSubtitle}>
-            {!user ? "Melde dich mit dem Demo-Admin-Konto an." : "Dieses Konto hat keine Admin-Rechte."}
+            {!user
+              ? "Melde dich mit dem Demo-Admin-Konto an."
+              : `Angemeldet als ${user.email} — dieses Konto hat keine Admin-Rechte.`}
           </Text>
-          {!user && (
-            <Button
-              loading={loggingIn}
-              onPress={async () => {
-                setLoggingIn(true);
-                setLoginError(null);
-                try {
-                  await login("admin@tanky.ch", "tanky-demo-2026");
-                } catch {
-                  setLoginError("Anmeldung fehlgeschlagen");
-                } finally {
-                  setLoggingIn(false);
-                }
-              }}
-            >
-              Als Admin anmelden
-            </Button>
-          )}
+          <Button
+            loading={loggingIn}
+            onPress={async () => {
+              setLoggingIn(true);
+              setLoginError(null);
+              try {
+                if (user) await logout();
+                await login("admin@tanky.ch", "tanky-demo-2026");
+              } catch {
+                setLoginError("Anmeldung fehlgeschlagen");
+              } finally {
+                setLoggingIn(false);
+              }
+            }}
+          >
+            {user ? "Zu Admin-Konto wechseln" : "Als Admin anmelden"}
+          </Button>
           {loginError && <Text style={styles.error}>{loginError}</Text>}
           <Link href="/" style={styles.backLink}>
             ← Zur Startseite
