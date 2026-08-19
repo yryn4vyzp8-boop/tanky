@@ -56,7 +56,7 @@ export default function ProfileScreen() {
               {user?.lastName?.[0]}
             </Text>
           </View>
-          <View>
+          <View style={{ gap: 3 }}>
             <Text style={styles.name}>
               {user?.firstName} {user?.lastName}
             </Text>
@@ -66,8 +66,9 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Fahrzeuge</Text>
-          <Pressable onPress={() => router.push("/(phone)/add-vehicle")} hitSlop={8}>
-            <Text style={styles.addLink}>+ Hinzufügen</Text>
+          <Pressable onPress={() => router.push("/(phone)/add-vehicle")} hitSlop={12}
+            style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
+            <Text style={styles.addLink}>Hinzufügen</Text>
           </Pressable>
         </View>
         <View style={{ gap: spacing.sm }}>
@@ -86,8 +87,9 @@ export default function ProfileScreen() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Zahlungsmethoden</Text>
-          <Pressable onPress={() => router.push("/(phone)/add-payment-method")} hitSlop={8}>
-            <Text style={styles.addLink}>+ Hinzufügen</Text>
+          <Pressable onPress={() => router.push("/(phone)/add-payment-method")} hitSlop={12}
+            style={({ pressed }) => [pressed && { opacity: 0.6 }]}>
+            <Text style={styles.addLink}>Hinzufügen</Text>
           </Pressable>
         </View>
         <View style={{ gap: spacing.sm }}>
@@ -122,22 +124,23 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { padding: spacing.lg, gap: spacing.lg },
-  avatarRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.md },
+  avatarRow: { flexDirection: "row", alignItems: "center", gap: spacing.lg, paddingBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
+  // Squircle: rounded square instead of circle
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60, height: 60,
+    borderRadius: 18,
     backgroundColor: colors.primaryTint,
-    alignItems: "center",
-    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    alignItems: "center", justifyContent: "center",
   },
-  avatarInitials: { color: colors.primaryMuted, ...typography.headline },
+  avatarInitials: { color: colors.primaryMuted, ...typography.title },
   name: { color: colors.textPrimary, ...typography.headline },
   email: { color: colors.textMuted, ...typography.caption },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.sm },
-  sectionTitle: { color: colors.textSecondary, ...typography.captionStrong },
-  addLink: { color: colors.primaryMuted, ...typography.captionStrong },
-  itemCard: { paddingVertical: spacing.md, gap: 2 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionTitle: { color: colors.textPrimary, ...typography.bodyStrong },
+  addLink: { color: colors.primaryMuted, ...typography.caption, fontWeight: "500" as const },
+  itemCard: { paddingVertical: spacing.md, gap: 3 },
   itemTitle: { color: colors.textPrimary, ...typography.bodyStrong },
   itemMeta: { color: colors.textMuted, ...typography.caption },
   empty: { color: colors.textMuted, ...typography.caption },

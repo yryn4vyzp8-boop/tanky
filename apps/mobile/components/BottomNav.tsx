@@ -26,6 +26,7 @@ export function BottomNav() {
             hitSlop={8}
           >
             <Text style={[styles.label, active && styles.labelActive]}>{item.label}</Text>
+            <View style={[styles.dot, active && styles.dotActive]} />
           </Pressable>
         );
       })}
@@ -42,8 +43,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(3, 3, 7, 0.92)",
     paddingTop: spacing.sm,
   },
-  item: { flex: 1, alignItems: "center", paddingVertical: spacing.md, minHeight: 44 },
+  item: { flex: 1, alignItems: "center", paddingVertical: spacing.md, minHeight: 44, gap: 5 },
   itemPressed: { opacity: 0.5 },
   label: { color: colors.textMuted, ...typography.captionStrong, letterSpacing: 0.3 },
   labelActive: { color: colors.primaryMuted },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: "transparent" },
+  dotActive: { backgroundColor: colors.primary },
 });
