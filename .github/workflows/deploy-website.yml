@@ -1,10 +1,12 @@
-name: Deploy website to GitHub Pages
+name: Deploy website + app to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "apps/website/**"
+      - "apps/mobile/**"
+      - "packages/domain/**"
       - ".github/workflows/deploy-website.yml"
   workflow_dispatch:
 
@@ -17,6 +19,11 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  # The live TANKY API (see render.yaml). Update if the Render service is
+  # ever renamed or moved.
+  TANKY_API_URL: https://tanky-api.onrender.com
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,9 +32,35 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build shared domain package
+        run: npm run build -w @tanky/domain
+
+      - name: Export app as a static PWA (served under /tanky/app/)
+        working-directory: apps/mobile
+        env:
+          TANKY_BASE_PATH: /tanky/app
+          EXPO_PUBLIC_API_URL: ${{ env.TANKY_API_URL }}
+        run: npx expo export -p web
+
+      - name: Combine website + app into one Pages site
+        run: |
+          rm -rf _site
+          mkdir -p _site/app
+          cp -r apps/website/. _site/
+          cp -r apps/mobile/dist/. _site/app/
+          touch _site/.nojekyll
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/website
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

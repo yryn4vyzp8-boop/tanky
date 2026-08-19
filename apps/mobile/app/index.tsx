@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../lib/theme";
@@ -54,11 +54,19 @@ export default function Launcher() {
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{demoMode ? "DEMO MODE" : "PRODUCTION"}</Text>
           </View>
-          <Text style={styles.footerText}>Environment: LOCAL · {API_BASE_URL}</Text>
+          <Text style={styles.footerText}>
+            Environment: {envLabel()} · {API_BASE_URL}
+          </Text>
         </View>
       </View>
     </SafeAreaView>
   );
+}
+
+function envLabel(): string {
+  if (Platform.OS !== "web") return "NATIVE";
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1" ? "LOCAL" : "DEPLOYED";
 }
 
 const styles = StyleSheet.create({

@@ -7,9 +7,9 @@
     <title>%WEB_TITLE%</title>
     <meta name="description" content="TANKY — Tanken. Bezahlen. Weiterfahren. Die mobile Fueling- und Payment-Plattform der Schweiz." />
     <meta name="theme-color" content="#0B5FFF" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="favicon.png" />
+    <link rel="apple-touch-icon" href="logo192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TANKY" />
@@ -43,7 +43,7 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {
+          navigator.serviceWorker.register("sw.js").catch(() => {
             // Non-fatal: the app works fully without an active service worker.
           });
         });

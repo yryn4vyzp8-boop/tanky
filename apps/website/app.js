@@ -1,6 +1,9 @@
-// Where the actual TANKY PWA is served. Update this once deployed
-// (e.g. "https://app.tanky.ch") — defaults to the local dev server.
-const APP_URL = "http://localhost:8081/(phone)/home";
+// Where the actual TANKY PWA is served. Locally that's the Expo dev server;
+// once deployed, the app is exported as a static site right alongside this
+// one (see .github/workflows/deploy-website.yml), so a relative path just
+// works — on a future custom domain this needs no change either.
+const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const APP_URL = isLocal ? "http://localhost:8081/(phone)/home" : "app/(phone)/home";
 
 document.querySelectorAll("[data-open-app]").forEach((el) => {
   el.setAttribute("href", APP_URL);
