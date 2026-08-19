@@ -78,3 +78,30 @@ export function seedDemoData(): void {
     `[tanky] Seeded demo account demo@tanky.ch / ${DEMO_PASSWORD} and admin@tanky.ch / ${DEMO_PASSWORD}`,
   );
 }
+
+const MOCK_TO_STRIPE_TEST_TOKEN: Record<string, { providerToken: string; last4: string }> = {
+  tok_mock_seed_visa: { providerToken: STRIPE_TEST_PAYMENT_METHOD.VISA, last4: "4242" },
+  tok_mock_seed_mastercard: { providerToken: STRIPE_TEST_PAYMENT_METHOD.MASTERCARD, last4: "4444" },
+};
+
+/**
+ * Runs on every startup, independent of seedDemoData (which only fires
+ * against a fully empty database). Whether the host's disk turns out to be
+ * ephemeral or not, the demo account should never be stuck holding
+ * mock-only tokens while Stripe is the live provider — this repairs it in
+ * place either way. A no-op once the tokens are already correct.
+ */
+export function fixDemoPaymentMethodsForActiveProvider(): void {
+  if (!isStripeEnabled) return;
+
+  const demoUser = userRepository.findByEmail("demo@tanky.ch");
+  if (!demoUser) return;
+
+  for (const method of paymentMethodRepository.listForUser(demoUser.id)) {
+    const replacement = MOCK_TO_STRIPE_TEST_TOKEN[method.providerToken];
+    if (!replacement) continue;
+    paymentMethodRepository.updateProviderToken(method.id, replacement.providerToken, replacement.last4);
+    // eslint-disable-next-line no-console
+    console.log(`[tanky] Repaired demo payment method ${method.id} (${method.brand}) for Stripe test mode`);
+  }
+}

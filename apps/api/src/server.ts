@@ -2,7 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { config } from "./config.js";
 import { runMigrations } from "./db/client.js";
-import { seedDemoData } from "./db/seed.js";
+import { seedDemoData, fixDemoPaymentMethodsForActiveProvider } from "./db/seed.js";
 import { isDemoMode, isStripeEnabled } from "./providers.js";
 import { HttpError } from "./errors.js";
 import { InvalidTransactionTransitionError } from "@tanky/domain";
@@ -18,6 +18,7 @@ import { adminRoutes } from "./routes/admin.js";
 
 runMigrations();
 seedDemoData();
+fixDemoPaymentMethodsForActiveProvider();
 
 const app = Fastify({ logger: true });
 

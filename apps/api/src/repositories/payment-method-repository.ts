@@ -65,4 +65,12 @@ export const paymentMethodRepository = {
       | undefined;
     return row ? toPaymentMethod(row) : null;
   },
+
+  updateProviderToken(id: string, providerToken: string, last4: string): void {
+    db.prepare(`UPDATE payment_methods SET provider_token = ?, last4 = ? WHERE id = ?`).run(
+      providerToken,
+      last4,
+      id,
+    );
+  },
 };
